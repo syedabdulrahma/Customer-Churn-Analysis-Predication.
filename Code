@@ -1,0 +1,83 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# Load Dataset (Update the correct path)
+file_path = r"C:\Users\gogul\Downloads\Bank Customer Churn Prediction.csv"
+
+# Load data
+data = pd.read_csv(file_path)
+
+# Display first few rows
+print("First 5 Rows of Data:")
+print(data.head())
+
+# Remove any leading/trailing spaces from column names
+data.columns = data.columns.str.strip().str.lower()
+
+# Handle missing values
+data = data.dropna()
+
+# Convert categorical columns using Label Encoding
+label_enc = LabelEncoder()
+data['gender'] = label_enc.fit_transform(data['gender'])  # Female = 0, Male = 1
+data['country'] = label_enc.fit_transform(data['country'])  # Encode 'France', 'Spain', 'Germany'
+
+# Define features and target variable
+if 'customer_id' in data.columns:
+    data = data.drop(columns=['customer_id'])  # Remove customer ID column if present
+
+X = data.drop(columns=['churn'])  # Features
+y = data['churn']  # Target variable
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Feature Scaling
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Logistic Regression Model
+log_model = LogisticRegression()
+log_model.fit(X_train, y_train)
+
+# Predictions
+y_pred_log = log_model.predict(X_test)
+
+# Model Evaluation - Logistic Regression
+log_accuracy = accuracy_score(y_test, y_pred_log)
+print("\nLogistic Regression Accuracy:", log_accuracy)
+print("\nClassification Report:\n", classification_report(y_test, y_pred_log))
+
+# Confusion Matrix - Logistic Regression
+plt.figure(figsize=(6, 4))
+sns.heatmap(confusion_matrix(y_test, y_pred_log), annot=True, fmt='d', cmap='Blues')
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Logistic Regression - Confusion Matrix")
+plt.show()
+
+# Alternative Model: Random Forest Classifier
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+y_pred_rf = rf_model.predict(X_test)
+
+# Model Evaluation - Random Forest
+rf_accuracy = accuracy_score(y_test, y_pred_rf)
+print("\nRandom Forest Accuracy:", rf_accuracy)
+print("\nRandom Forest Classification Report:\n", classification_report(y_test, y_pred_rf))
+
+# Confusion Matrix - Random Forest
+plt.figure(figsize=(6, 4))
+sns.heatmap(confusion_matrix(y_test, y_pred_rf), annot=True, fmt='d', cmap='Greens')
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Random Forest - Confusion Matrix")
+plt.show()
